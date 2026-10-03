@@ -25,31 +25,51 @@
     return rating;
   }
 
-  function card(centre, programName) {
+  function bestVacancy(programs) {
+    var vacancy = "";
+    var vrank = 3;
+    var ranks = { Yes: 0, Unknown: 1, No: 2 };
+    for (var i = 0; i < programs.length; i++) {
+      var rank = ranks[programs[i][1]];
+      if (rank != null && rank < vrank) {
+        vrank = rank;
+        vacancy = programs[i][1];
+      }
+    }
+    return vacancy;
+  }
+
+  function shortLabel(labels, group, value) {
+    var map = (labels && labels[group]) || {};
+    return map[value] || value;
+  }
+
+  function card(centre, programName, labels) {
     var programs = centre.programs || [];
     if (programName) programs = programs.filter(function (program) { return program[0] === programName; });
-    var chips = programs.map(function (program) {
-      var mark = program[2] == null ? "" : ' <b class="' + (program[2] < 3 ? "low" : "ok") + '">' + esc(program[2].toFixed(2)) + "</b>";
-      var vacancy = program[1] ? ' <span class="badge ' + esc(String(program[1]).toLowerCase()) + '">' + esc(program[1]) + "</span>" : "";
-      return '<span class="prog">' + esc(program[0] || "") + mark + vacancy + "</span>";
-    }).join("");
-    var rating = bestRating(programs);
-    var side = rating == null ? "" : '<p class="rating-num' + (rating < 3 ? " low" : "") + '">' + esc(rating.toFixed(2)) + "</p>";
-    var phone = centre.phone
-      ? '<a class="phone" href="' + esc(DaycarePlaces.telHref(centre.phone)) + '">' + esc(centre.phone) + "</a>"
-      : "";
-    var area = "";
-    if (mode === "programs" && centre.wardSlug) {
-      area = '<a href="' + esc(DaycarePlaces.page("areas.html", { area: centre.wardSlug })) + '">' + esc(centre.ward) + "</a> · ";
+    var address = centre.address || "Address not published";
+    if (centre.intersection) address += " (" + centre.intersection + ")";
+    if (centre.postal && centre.postalM != null && centre.postalM <= DaycareFuzzy.POSTAL_DISPLAY_MAX_M) {
+      address += " " + DaycareFuzzy.formatPostal(centre.postal);
     }
-    var status = phone
-      ? '<div class="card-status"><span class="status-badge"></span><span class="status-phone">' + phone + "</span></div>"
-      : "";
-    return '<article class="card"><div class="card-top"><div class="card-body"><h2><a href="' + esc(DaycarePlaces.page("centre.html", { id: centre.id })) + '">' + esc(centre.name) + "</a></h2>"
-      + '<p class="addr">' + area + esc(centre.address || "Address not published") + "</p>"
-      + (centre.auspice ? '<p class="meta">' + esc(labelize(centre.auspice)) + "</p>" : "")
-      + '</div><div class="side">' + side + '</div></div><div class="card-foot"><div class="progs">' + chips + "</div>"
-      + status + "</div></article>";
+    return DaycarePlaces.centreCard({
+      href: DaycarePlaces.page("centre.html", { id: centre.id }),
+      name: centre.name,
+      address: address,
+      lat: centre.lat,
+      lon: centre.lon,
+      rating: bestRating(programs),
+      ratingLabel: programName ? "Rating" : "Highest Rating",
+      programs: programs,
+      vacancy: bestVacancy(programs),
+      showDistance: false,
+      phone: centre.phone || "",
+      ward: centre.ward || "",
+      wardHref: centre.wardSlug ? DaycarePlaces.page("areas.html", { area: centre.wardSlug }) : "",
+      auspice: centre.auspice ? labelize(centre.auspice) : "",
+      fee: centre.fee ? shortLabel(labels, "feeShort", centre.fee) : "",
+      cwelcc: centre.cwelcc ? shortLabel(labels, "cwelccShort", centre.cwelcc) : ""
+    });
   }
 
   function directory(items, param) {
@@ -76,6 +96,7 @@
     .then(function (catalog) {
       var meta = catalog.meta || {};
       var place = catalog.place || {};
+      var labels = catalog.labels || {};
       DaycarePlaces.paintFooter(meta);
       var params = new URLSearchParams(location.search);
       if (mode === "areas") {
@@ -101,7 +122,7 @@
         listEl.hidden = false;
         var rows = (catalog.centres || []).filter(function (centre) { return centre.wardSlug === ward.slug; });
         rows.sort(function (a, b) { return a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) || a.id - b.id; });
-        listEl.innerHTML = rows.map(function (centre) { return card(centre); }).join("");
+        listEl.innerHTML = rows.map(function (centre) { return card(centre, "", labels); }).join("");
         return;
       }
       var programSlug = params.get("program") || "";
@@ -127,7 +148,7 @@
         return (centre.programs || []).some(function (row) { return row[0] === program.name; });
       });
       matched.sort(function (a, b) { return a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) || a.id - b.id; });
-      listEl.innerHTML = matched.map(function (centre) { return card(centre, program.name); }).join("");
+      listEl.innerHTML = matched.map(function (centre) { return card(centre, program.name, labels); }).join("");
     })
     .catch(function () {
       titleEl.textContent = "List unavailable";

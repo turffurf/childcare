@@ -159,6 +159,12 @@
       var id = button.getAttribute("data-chip");
       if (id === "vacancy" || id === "rated" || id === "near") return;
       button.hidden = !known[id];
+      if (button.querySelector(".chip-label")) return;
+      var label = (button.textContent || "").replace(/\s+/g, " ").trim();
+      button.classList.add("chip-age");
+      button.setAttribute("data-tip", label);
+      button.innerHTML = DaycarePlaces.programIcon(id)
+        + '<span class="chip-label">' + DaycarePlaces.esc(label) + "</span>";
     });
     qInput.value = params.get("q") || "";
     document.getElementById("postal").value = DaycareFuzzy.formatPostal(compactPostal(params.get("postal") || ""));
@@ -415,17 +421,6 @@
     return { rows: rows, tokens: tokens, excluded: excluded };
   }
 
-  function programsHtml(programs) {
-    if (!programs.length) return '<span class="muted">No program published</span>';
-    return '<div class="progs">' + programs.map(function (program) {
-      var mark = "";
-      if (program[2] != null) {
-        mark = ' <b class="' + (program[2] < 3 ? "low" : "ok") + '">' + esc(program[2].toFixed(2)) + "</b>";
-      }
-      return '<span class="prog">' + esc(program[0]) + mark + "</span>";
-    }).join("") + "</div>";
-  }
-
   function shortLabel(group, value) {
     var labels = (catalog.labels && catalog.labels[group]) || {};
     return labels[value] || value;
@@ -433,50 +428,31 @@
 
   function cardHtml(row, state) {
     var centre = row.entry.centre;
-    var bits = [];
-    if (centre.auspice) bits.push(labelize(centre.auspice));
-    if (centre.fee) bits.push(shortLabel("feeShort", centre.fee));
-    if (centre.cwelcc) bits.push(shortLabel("cwelccShort", centre.cwelcc));
     var address = centre.address || "Address not published";
     if (centre.intersection) address += " (" + centre.intersection + ")";
-    var postal = "";
     if (centre.postal && centre.postalM != null && centre.postalM <= DaycareFuzzy.POSTAL_DISPLAY_MAX_M) {
-      postal = ' <span class="muted">' + esc(DaycareFuzzy.formatPostal(centre.postal)) + "</span>";
+      address += " " + DaycareFuzzy.formatPostal(centre.postal);
     }
-    var ratingLabel = state.program ? "Rating" : "Highest rating";
-    var rating = row.summary.rating == null
-      ? ""
-      : '<p class="rating-num ' + (row.summary.rating < 3 ? "low" : "") + '">' + esc(row.summary.rating.toFixed(2)) + "<small>" + esc(ratingLabel) + "</small></p>";
-    var vacancy = row.summary.vacancy
-      ? '<span class="badge ' + esc(row.summary.vacancy.toLowerCase()) + '">' + esc(row.summary.vacancy === "Yes" ? "Vacancy" : row.summary.vacancy === "No" ? "No vacancy" : "Vacancy unknown") + "</span>"
-      : "";
-    var distance = "";
-    if (origin) {
-      distance = row.entry.distance == null
-        ? '<span class="dist muted">No map point</span>'
-        : '<span class="dist">' + esc(DaycareFuzzy.formatKm(row.entry.distance)) + "</span>";
-    }
-    var phone = centre.phone
-      ? '<a class="phone" href="' + esc(DaycarePlaces.telHref(centre.phone)) + '">' + esc(centre.phone) + "</a>"
-      : "";
-    var close = row.fuzzy ? '<span class="close-tag">Close spelling</span>' : "";
-    var ward = centre.wardSlug
-      ? '<a href="' + esc(DaycarePlaces.page("areas.html", { area: centre.wardSlug })) + '">' + esc(centre.ward) + "</a>"
-      : esc(centre.ward || "");
-    var status = "";
-    if (vacancy || distance || phone) {
-      status = '<div class="card-status">' + distance
-        + '<span class="status-badge">' + vacancy + "</span>"
-        + '<span class="status-phone">' + phone + "</span></div>";
-    }
-    return '<article class="card"><div class="card-top"><div class="card-body"><h2><a href="' + esc(DaycarePlaces.page("centre.html", { id: centre.id })) + '">' + esc(centre.name) + "</a></h2>"
-      + '<p class="addr">' + esc(address) + postal + "</p>"
-      + '<p class="meta">' + ward + (bits.length ? " · " + esc(bits.join(" · ")) : "") + "</p>"
-      + close
-      + '</div><div class="side">' + rating + '</div></div><div class="card-foot">'
-      + programsHtml(row.summary.programs)
-      + status
-      + "</div></article>";
+    return DaycarePlaces.centreCard({
+      href: DaycarePlaces.page("centre.html", { id: centre.id }),
+      name: centre.name,
+      address: address,
+      lat: centre.lat,
+      lon: centre.lon,
+      rating: row.summary.rating,
+      ratingLabel: state.program ? "Rating" : "Highest Rating",
+      programs: row.summary.programs,
+      vacancy: row.summary.vacancy,
+      showDistance: !!origin,
+      distance: origin && row.entry.distance != null ? DaycareFuzzy.formatKm(row.entry.distance) : "",
+      phone: centre.phone || "",
+      ward: centre.ward || "",
+      wardHref: centre.wardSlug ? DaycarePlaces.page("areas.html", { area: centre.wardSlug }) : "",
+      auspice: centre.auspice ? labelize(centre.auspice) : "",
+      fee: centre.fee ? shortLabel("feeShort", centre.fee) : "",
+      cwelcc: centre.cwelcc ? shortLabel("cwelccShort", centre.cwelcc) : "",
+      note: row.fuzzy ? "Close spelling" : ""
+    });
   }
 
   function syncChips(state) {
