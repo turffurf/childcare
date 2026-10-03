@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Where the licensed child care list for the selected Canadian city came from.">
+  <script>
+    try {
+      var savedTheme = localStorage.getItem("daycare-theme");
+      if (savedTheme === "sea" || savedTheme === "sand" || savedTheme === "lilac" || savedTheme === "rose" || savedTheme === "stone") {
+        document.documentElement.setAttribute("data-theme", savedTheme);
+      }
+    } catch (error) {}
+  </script>
+  <meta name="theme-color" content="#14332f">
+  <title>About · Licensed child care</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400..700;1,400&family=Source+Serif+4:opsz,wght@8..60,500..700&display=swap">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="about">
+  <a class="skip vh" href="#content">Skip to content</a>
+  <header class="site">
+    <div class="wrap bar">
+      <div class="identity">
+        <a class="brand" id="brand-link" href="index.html"><svg class="mark" width="40" height="40" viewBox="0 0 32 32" aria-hidden="true"><rect class="mark-tile" width="32" height="32" rx="8"/><path class="mark-house" d="M8 14.5 16 8l8 6.5V24a1 1 0 0 1-1 1h-5v-6h-4v6H9a1 1 0 0 1-1-1z"/><rect class="mark-tile" x="14.7" y="15.6" width="2.6" height="2.3" rx="0.35"/></svg><span class="brand-copy"><strong id="brand-name">Licensed child care</strong></span></a>
+        <div class="place-switch" role="group" aria-label="Province and city">
+          <span class="place-readout" id="province-label">Ontario</span>
+          <label class="place-field province" hidden><span class="vh">Province</span><select id="province-select" aria-label="Province"></select></label>
+          <span class="place-sep" aria-hidden="true"></span>
+          <span class="place-readout" id="city-label">Toronto</span>
+          <label class="place-field city" hidden><span class="vh">City</span><select id="city-select" aria-label="City"></select></label>
+        </div>
+      </div>
+      <div class="theme"><button type="button" class="theme-button" id="theme-button" aria-expanded="false" aria-controls="theme-menu">Theme</button><div id="theme-menu" class="theme-menu" hidden><button type="button" data-theme-choice="sage" aria-pressed="true"><span class="dot" style="background:#14332f"></span>Sage</button><button type="button" data-theme-choice="sea" aria-pressed="false"><span class="dot" style="background:#16344a"></span>Sea</button><button type="button" data-theme-choice="sand" aria-pressed="false"><span class="dot" style="background:#4a3828"></span>Sand</button><button type="button" data-theme-choice="lilac" aria-pressed="false"><span class="dot" style="background:#3c3354"></span>Lilac</button><button type="button" data-theme-choice="rose" aria-pressed="false"><span class="dot" style="background:#4a3034"></span>Rose</button><button type="button" data-theme-choice="stone" aria-pressed="false"><span class="dot" style="background:#2c3330"></span>Stone</button></div></div>
+      <nav class="site" aria-label="Site"><a href="index.html" data-nav="search">Search</a><a href="map.html" data-nav="map">Map</a><a href="areas.html" data-nav="areas">Areas</a><a href="programs.html" data-nav="programs">Programs</a><a href="about.html" data-nav="about">About</a></nav>
+    </div>
+  </header>
+  <main id="content">
+    <div class="wrap prose">
+      <h1 id="page-title">About this list</h1>
+      <p class="lede" id="page-lede">Loading…</p>
+      <div id="about-body"></div>
+    </div>
+  </main>
+  <footer class="site"><div class="wrap foot"><p class="foot-meta" id="foot-meta">Toronto, Ontario · Last updated</p><p class="foot-sample" id="foot-sample" hidden>Sample data for testing. These centres are invented and are not a licensed child care list.</p><p id="site-footer">Centre details are a copy of a public list. Vacancy text is that snapshot. Call the centre for a current opening.</p></div></footer>
+  <script src="assets/theme.js" defer></script>
+  <script src="assets/place.js" defer></script>
+  <script src="assets/about.js" defer></script>
+</body>
+</html>
